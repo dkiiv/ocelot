@@ -210,7 +210,6 @@ uint8_t crc8_lut_1d[256];
 #define HCA_1           0x0D2  // RX
 #define BREMSE_1        0x1A0  // RX
 #define BREMSE_3        0x4A0  // RX
-#define KOMBI_1         0x320  // RX
 #define GK_1            0x390  // RX
 #define LENKHILFE_2     0x3D2  // RX
 #define PLA_1           0x3D4  // TX (RX too if OEM present)
@@ -244,7 +243,6 @@ bool pla_override = false;
 bool pla_sign = false;
 bool pla_limit = false;
 bool oempla_active = false;
-bool LH2_PLA = false;
 int pla_angle = 0;
 int pla_angle_last = 0;
 uint8_t sleepCounter = 0;
@@ -253,7 +251,6 @@ uint8_t pla_stat = 0;
 uint8_t hca_rx_counter = 0;
 uint8_t pla_wd_counter = 0;
 uint8_t M1_counter = 0;
-uint8_t LH2_aktLenkeingriff = 0;
 uint16_t pla_angle_limit = 0;
 uint16_t pla_rate_limit = 0;
 uint16_t vego = 0;
@@ -359,22 +356,11 @@ void CAN1_RX0_IRQ_Handler(void) {
         // set vEgo to 0
         vego = (to_fwd.RDLR >> 17U) & 0x7FFF;
         sleepCounter = 0;  // reset sleep timer on RX of BR1
-        if (filter) {
-          to_fwd.RDLR = LH2_PLA ? ((to_fwd.RDLR & 0x0000FFFF) | 0x063E0000) : to_fwd.RDLR & 0x0000FFFF;
-        }
         break;
       case (BREMSE_3):
-        // set WSS's to 0
+        // set WSS-HR to 0
         if (filter) {
-          to_fwd.RDLR = LH2_PLA ? 0x063C063C : 0x00000000;
-          to_fwd.RDHR = LH2_PLA ? 0x063C063C : 0x00000000;
-        }
-        break;
-      case (KOMBI_1):
-        // set cluster speed to 0
-        if (filter) {
-          to_fwd.RDLR = LH2_PLA ? ((to_fwd.RDLR & 0x01FFFFFF) | 0x04000000) : to_fwd.RDLR & 0x01FFFFFF;
-          to_fwd.RDHR = LH2_PLA ? ((to_fwd.RDHR & 0xFFFFFF00) | 0x00000006) : to_fwd.RDHR & 0xFFFFFF00;
+          to_fwd.RDHR &= 0x0000FFFF;
         }
         break;
       case (GK_1):
@@ -450,8 +436,6 @@ void CAN3_RX0_IRQ_Handler(void) {
       case (LENKHILFE_2):
                           // if LH2_PLA_Abbr == 2 latch override on
         pla_override = ((to_fwd.RDHR >> 20U) == 2U) || pla_override;
-        LH2_aktLenkeingriff = to_fwd.RDHR & 0xFF;
-        LH2_PLA = LH2_aktLenkeingriff == 0x40;
         if (pla_override) {
           to_fwd.RDHR = (to_fwd.RDHR & 0x0FFFFF) | 0x200000;
           msg = ((uint64_t)to_fwd.RDHR << 32U) | to_fwd.RDLR;
