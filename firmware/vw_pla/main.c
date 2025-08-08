@@ -328,7 +328,7 @@ void CAN1_RX0_IRQ_Handler(void) {
         pla_exit = hca_counter_fault || hca_checksum_fault || pla_override;
         hca_stat = ((byte[1] >> 4U) & 0b1111);
         filter = ((hca_stat == 11U || hca_stat == 13U) && !pla_exit && !oempla_active);
-        if (hca_stat == 10U || hca_stat == 11U || hca_stat == 13U || hca_stat == 15U) {
+        if (hca_stat >= 10U) {
           if (!pla_exit){
             pla_wd_counter = 0;  // reset exit counter on proper RX of PLA control
           }
@@ -358,8 +358,9 @@ void CAN1_RX0_IRQ_Handler(void) {
         sleepCounter = 0;  // reset sleep timer on RX of BR1
         break;
       case (BREMSE_3):
-        // set WSS-HR to 0
+        // set WSS to 0
         if (filter) {
+          to_fwd.RDLR &= 0x0000FFFF;
           to_fwd.RDHR &= 0x0000FFFF;
         }
         break;
@@ -501,7 +502,7 @@ void TIM3_IRQ_Handler(void) {
     if ((CAN3->TSR & CAN_TSR_TME2) == CAN_TSR_TME2) {
       CAN_FIFOMailBox_TypeDef to_send;
 
-      if ((hca_stat == 10U || hca_stat == 11U || hca_stat == 13U || hca_stat == 15U) && !oempla_active) {
+      if (hca_stat >= 10U && !oempla_active) {
         pla_stat = (hca_stat == 10U ? 8U : hca_stat - 7U);
         pla_rdlr = (hca_rdlr & 0xFFFF0000) | ((uint16_t)pla_stat << 12U);
         if (hca_stat == 13U && !pla_exit) {
