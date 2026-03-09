@@ -96,6 +96,11 @@ projects = {
   "main": "vw_pla/main.c",
   "startup": "startup_stm32f413xx.s",
   "flags": PROJECT_FLAGS_F4
+  },
+  "tesla_bench": {
+  "main": "tesla_bench/main.c",
+  "startup": "startup_stm32f413xx.s",
+  "flags": PROJECT_FLAGS_F4
   }
 }
 
