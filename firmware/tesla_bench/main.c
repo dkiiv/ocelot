@@ -292,8 +292,20 @@ void set_led(uint8_t color, bool enabled) {
 
 void TIM3_IRQ_Handler(void) {
   // cmain loop, 100hz
-  // put message fuzzing generator here
-
+  if ((CAN1->TSR & CAN_TSR_TME1) == CAN_TSR_TME1) {
+    send_MSG_0x3C2();  // 0x3C2 | 962  | VCLEFT_switchStatus       | 8 bytes | no CS / no CTR
+    send_MSG_0x103();  // 0x103 | 259  | VCRIGHT_doorStatus        | 8 bytes | no CS / no CTR
+    send_MSG_0x249();  // 0x249 | 585  | SCCM_leftStalk            | 3 bytes | CS@byte0 / CTR@byte1-low
+    send_MSG_0x118();  // 0x118 | 280  | DI_systemStatus           | 8 bytes | CS@byte0 / CTR@byte1-low
+    send_MSG_0x343();  // 0x343 | 835  | VCRIGHT_status            | 8 bytes | no CS / no CTR
+    send_MSG_0x229();  // 0x229 | 553  | SCCM_rightStalk           | 3 bytes | CS@byte0 / CTR@byte1-low
+    send_MSG_0x129();  // 0x129 | 297  | SCCM_steeringAngleSensor  | 8 bytes | CS@byte0 / CTR@byte1-low
+    send_MSG_0x102();  // 0x102 | 258  | VCLEFT_doorStatus         | 8 bytes | no CS / no CTR
+    send_MSG_0x238();  // 0x238 | 568  | STW_ACTN_RQ               | 8 bytes | CS@byte7 / no CTR        
+    send_MSG_0x3E9();  // 0x3E9 | 1001 | DAS_bodyControls          | 8 bytes | CS@byte7 / CTR@byte6-high
+    send_MSG_0x3F5();  // 0x3F5 | 1013 | ID3F5VCFRONT_lighting     | 8 bytes | no CS / no CTR
+    tick_counter();    // advance msg counters
+  }
   TIM3->SR = 0;
 }
 
